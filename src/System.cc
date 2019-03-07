@@ -120,7 +120,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     {
         cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
         exit(-1);
-    }   
+    }
 
     // Check mode change
     {
@@ -171,7 +171,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     {
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
         exit(-1);
-    }    
+    }
 
     // Check mode change
     {
@@ -325,6 +325,61 @@ void System::Shutdown()
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
 }
 
+void System::SaveMap(const string &filename)
+{
+    cout << endl << "Saving map points to " << filename <<  "..." << endl;
+
+    const vector<MapPoint*> &allMapPoints = mpMap->GetAllMapPoints();
+
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+
+    for(size_t i=0; i<allMapPoints.size(); i++)
+    {
+        cv::Mat pos = allMapPoints[i]->GetWorldPos();
+        f << setprecision(6) << pos.at<float>(0) <<" " << pos.at<float>(1) << " " << pos.at<float>(2) << endl;
+    }
+
+    f.close();
+    cout << endl << "map points saved!" << endl;
+}
+
+void System::SaveTrajectoryMonocular(const string &filename)
+{
+    cout << endl << "Saving keyframe trajectory to " << filename << " ..." << endl;
+
+    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+
+    for(size_t i=0; i<vpKFs.size(); i++)
+    {
+        KeyFrame* pKF = vpKFs[i];
+
+        if(pKF->isBad())
+            continue;
+
+        //Tcw = pose of camera in world reference
+        cv::Mat R = pKF->GetRotation().t();
+        cv::Mat t = pKF->GetCameraCenter();
+
+        // Save camera pose: translation (3x1), rotation (3x3)
+        // Format: timestamp, tx, ty, tz, R1, ..., R9
+        f << setprecision(6) << pKF->mTimeStamp << setprecision(7)
+          << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
+          << " " << R.at<float>(0,0) << " " << R.at<float>(0,1) << " " << R.at<float>(0,2)
+          << " " << R.at<float>(1,0) << " " << R.at<float>(1,1) << " " << R.at<float>(1,2)
+          << " " << R.at<float>(2,0) << " " << R.at<float>(2,1) << " " << R.at<float>(2,2)
+          << endl;
+    }
+    f.close();
+    cout << endl << "trajectory saved!" << endl;
+}
+
 void System::SaveTrajectoryTUM(const string &filename)
 {
     cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
@@ -384,7 +439,6 @@ void System::SaveTrajectoryTUM(const string &filename)
     f.close();
     cout << endl << "trajectory saved!" << endl;
 }
-
 
 void System::SaveKeyFrameTrajectoryTUM(const string &filename)
 {

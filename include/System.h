@@ -101,6 +101,11 @@ public:
     // This function must be called before saving the trajectory.
     void Shutdown();
 
+    // Save camera trajectory generally for monocular sequences
+    // Pose is in matrix format (translation vector and rotation matrix)
+    // Call first Shutdown()
+    void SaveTrajectoryMonocular(const string &filename);
+
     // Save camera trajectory in the TUM RGB-D dataset format.
     // Only for stereo and RGB-D. This method does not work for monocular.
     // Call first Shutdown()
@@ -120,7 +125,10 @@ public:
     void SaveTrajectoryKITTI(const string &filename);
 
     // TODO: Save/Load functions
-    // SaveMap(const string &filename);
+    // Save all map points as of the last frame
+    // Call first Shutdown()
+    // Reference frame is that of the initial frame when initilized
+    void SaveMap(const string &filename);
     // LoadMap(const string &filename);
 
     // Information from most recent processed frame

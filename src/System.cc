@@ -345,6 +345,65 @@ void System::SaveMap(const string &filename)
     cout << endl << "map points saved!" << endl;
 }
 
+void System::SaveKeyFrameObjectMap(const string &filename)
+{
+    cout << endl << "Saving keyframe object map to " << filename << " ..." << endl;
+
+    vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
+    sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
+
+    // hard-coded object based on sequence for now
+    // sm1 0018765.jpg
+    // hard-coded is hit and miss, needs to correspond to a key-frame
+    float width = 204;
+    float height = 169;
+    float x = 623 + (width/2);
+    float y = 145 + (height/2);
+    float r = std::max(width/2, height/2);
+
+    // read json file (choose a key-frame and find the annotation)
+
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+
+    for(size_t i=0; i<vpKFs.size(); i++)
+    {
+        KeyFrame* pKF = vpKFs[i];
+
+        if(pKF->isBad())
+            continue;
+
+        vector<size_t> indices = pKF->GetFeaturesInArea(x, y, r);
+
+        f << setprecision(6) << pKF->mTimeStamp;
+        size_t j = 0;
+        // while(j < 5 && j < indices.size())
+        // {
+        //     size_t jdx = indices[j];
+        //     MapPoint* objectMapPoint = pKF->GetMapPoint(jdx);
+        //     if(objectMapPoint==nullptr)
+        //         continue
+        //     cv::Mat pos = objectMapPoint->GetWorldPos();
+        //     f << " " << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
+        //     j++
+        // }
+        for(const auto& jdx : indices)
+        {
+            MapPoint* objectMapPoint = pKF->GetMapPoint(jdx);
+            if(objectMapPoint)
+            {
+                cv::Mat pos = objectMapPoint->GetWorldPos();
+                f << " " << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
+            }
+        }
+        f << endl;
+    }
+
+    f.close();
+    cout << endl << "keyframe object map saved!" << endl;
+}
+
 void System::SaveTrajectoryMonocular(const string &filename)
 {
     cout << endl << "Saving keyframe trajectory to " << filename << " ..." << endl;

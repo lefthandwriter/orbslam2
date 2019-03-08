@@ -36,6 +36,9 @@
 #include "ORBVocabulary.h"
 #include "Viewer.h"
 
+// #include <json/json.h>
+// #include <json/reader.h>
+
 #include <unistd.h>
 
 namespace ORB_SLAM2
@@ -100,6 +103,10 @@ public:
     // It waits until all threads have finished.
     // This function must be called before saving the trajectory.
     void Shutdown();
+
+    // Save keyframe map points belonging to the object
+    // Call first Shutdown()
+    void SaveKeyFrameObjectMap(const string &filename);
 
     // Save camera trajectory generally for monocular sequences
     // Pose is in matrix format (translation vector and rotation matrix)

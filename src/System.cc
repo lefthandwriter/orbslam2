@@ -19,7 +19,6 @@
 */
 
 
-#include "BoundingBox.h"
 #include "System.h"
 #include "Converter.h"
 #include <chrono>

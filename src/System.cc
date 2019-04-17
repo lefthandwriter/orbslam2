@@ -19,7 +19,7 @@
 */
 
 
-
+#include "BoundingBox.h"
 #include "System.h"
 #include "Converter.h"
 #include <chrono>
@@ -345,23 +345,49 @@ void System::SaveMap(const string &filename)
     cout << endl << "map points saved!" << endl;
 }
 
-void System::SaveKeyFrameObjectMap(const string &filename)
+void System::SaveKeyFrameObjectMap(const string &filename, const string &annotationFile, const unordered_map<double,string> &timestampToImageFilename)
 {
     cout << endl << "Saving keyframe object map to " << filename << " ..." << endl;
 
     vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
-    // hard-coded object based on sequence for now
-    // sm1 0018765.jpg
-    // hard-coded is hit and miss, needs to correspond to a key-frame
-    float width = 204;
-    float height = 169;
-    float x = 623 + (width/2);
-    float y = 145 + (height/2);
-    float r = std::max(width/2, height/2);
+    struct Bbox
+    {
+        float x_c, y_c; // center coordinates
+        float r; // radius
+    };
 
-    // read json file (choose a key-frame and find the annotation)
+    Json::Reader reader;
+    Json::Value root;
+    std::ifstream jsonFile(annotationFile, std::ifstream::binary);
+    reader.parse(jsonFile, root, false);
+    unordered_map<string,Bbox> ImageToAnnotation;
+    for(Json::Value::ArrayIndex i = 0; i < root["output"]["frames"].size(); i++)
+    {
+        string framenumber = root["output"]["frames"][i]["frame_number"].asString();
+        string rois = root["output"]["frames"][i]["RoIs"].asString();
+        if(rois.size() == 0)
+        {
+            continue;
+        }
+        stringstream ss(rois);
+        string f;
+        getline(ss, f, ',');
+        getline(ss, f, ',');
+        float x = std::stof(f);
+        getline(ss, f, ',');
+        float y = std::stof(f);
+        getline(ss, f, ',');
+        float width = std::stof(f);
+        getline(ss, f, ',');
+        float height = std::stof(f);
+        float x_c = x + (width / 2);
+        float y_c = y + (height / 2);
+        float r = std::max(width/2, height/2);
+        Bbox box = {x_c, y_c, r};
+        ImageToAnnotation[framenumber] = box;
+    }
 
     ofstream f;
     f.open(filename.c_str());
@@ -374,30 +400,29 @@ void System::SaveKeyFrameObjectMap(const string &filename)
         if(pKF->isBad())
             continue;
 
-        vector<size_t> indices = pKF->GetFeaturesInArea(x, y, r);
-
-        f << setprecision(6) << pKF->mTimeStamp;
-        size_t j = 0;
-        // while(j < 5 && j < indices.size())
-        // {
-        //     size_t jdx = indices[j];
-        //     MapPoint* objectMapPoint = pKF->GetMapPoint(jdx);
-        //     if(objectMapPoint==nullptr)
-        //         continue
-        //     cv::Mat pos = objectMapPoint->GetWorldPos();
-        //     f << " " << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
-        //     j++
-        // }
-        for(const auto& jdx : indices)
+        if(timestampToImageFilename.count(pKF->mTimeStamp))
         {
-            MapPoint* objectMapPoint = pKF->GetMapPoint(jdx);
-            if(objectMapPoint)
+            string imagename = timestampToImageFilename.at(pKF->mTimeStamp);
+
+            if(ImageToAnnotation.count(imagename))
             {
-                cv::Mat pos = objectMapPoint->GetWorldPos();
-                f << " " << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
+                Bbox box = ImageToAnnotation.at(imagename);
+                vector<size_t> indices = pKF->GetFeaturesInArea(box.x_c, box.y_c, box.r);
+                f << setprecision(2) << pKF->mTimeStamp;
+                f << " " << imagename;
+
+                for(const auto& jdx : indices)
+                {
+                    MapPoint* objectMapPoint = pKF->GetMapPoint(jdx);
+                    if(objectMapPoint)
+                    {
+                        cv::Mat pos = objectMapPoint->GetWorldPos();
+                        f << " " << setprecision(6) << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2);
+                    }
+                }
+                f << endl;
             }
         }
-        f << endl;
     }
 
     f.close();

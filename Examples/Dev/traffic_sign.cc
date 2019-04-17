@@ -25,6 +25,7 @@
 #include<future>
 #include<chrono>
 #include<thread>
+#include<unordered_map>
 
 #include<opencv2/core/core.hpp>
 
@@ -35,11 +36,14 @@ using namespace std;
 void LoadImages(const string &strFile, vector<string> &vstrImageFilenames,
                 vector<double> &vTimestamps);
 
+unordered_map<double,string> MapImages(const vector<string> &vstrImageFilenames, 
+                const vector<double> vTimestamps);
+
 int processing(char **argv, ORB_SLAM2::System* slamPtr);
 
 int main(int argc, char **argv)
 {
-    if(argc != 4)
+    if(argc < 4)
     {
         cerr << endl << "Usage: ./traffic_sign path_to_vocabulary path_to_settings path_to_sequence" << endl;
         return 1;
@@ -60,6 +64,7 @@ int processing(char **argv, ORB_SLAM2::System* slamPtr) {
     vector<double> vTimestamps;
     string strFile = string(argv[3])+"/rgb.txt";
     LoadImages(strFile, vstrImageFilenames, vTimestamps);
+    unordered_map<double,string> timestampToImageFilename = MapImages(vstrImageFilenames, vTimestamps);
 
     int nImages = vstrImageFilenames.size();
 
@@ -134,8 +139,9 @@ int processing(char **argv, ORB_SLAM2::System* slamPtr) {
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
+    string path_to_annotations = argv[4];
     SLAM.SaveTrajectoryMonocular("Saving/KeyFrameTrajectorySP1_2.txt");
-    SLAM.SaveKeyFrameObjectMap("Saving/ObjectMapSP1_2.txt");
+    SLAM.SaveKeyFrameObjectMap("Saving/ObjectMapSP1_2.txt", path_to_annotations, timestampToImageFilename);
     // SLAM.SaveMap("Saving/MapSP1.txt");
 
     return 0;
@@ -168,4 +174,20 @@ void LoadImages(const string &strFile, vector<string> &vstrImageFilenames, vecto
             vstrImageFilenames.push_back(sRGB);
         }
     }
+}
+
+unordered_map<double,string> MapImages(const vector<string> &vstrImageFilenames, const vector<double> vTimestamps)
+{
+    unordered_map<double,string> timestampToImageFilename;
+    int numFrames = vstrImageFilenames.size();
+    for(int i = 0; i < numFrames; i++)
+    {
+        string fname = vstrImageFilenames[i];
+        stringstream ss(fname);
+        string f;
+        getline(ss, f, '/'); // todo: Unix dependent
+        getline(ss, f);
+        timestampToImageFilename[vTimestamps[i]] = f;
+    }
+    return timestampToImageFilename;
 }

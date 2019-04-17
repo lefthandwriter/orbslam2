@@ -36,8 +36,8 @@
 #include "ORBVocabulary.h"
 #include "Viewer.h"
 
-// #include <json/json.h>
-// #include <json/reader.h>
+#include "json/json.h"
+#include "json/reader.h"
 
 #include <unistd.h>
 
@@ -106,7 +106,7 @@ public:
 
     // Save keyframe map points belonging to the object
     // Call first Shutdown()
-    void SaveKeyFrameObjectMap(const string &filename);
+    void SaveKeyFrameObjectMap(const string &filename, const string &annotationFile, const unordered_map<double,string> &timestampToImageFilename);
 
     // Save camera trajectory generally for monocular sequences
     // Pose is in matrix format (translation vector and rotation matrix)

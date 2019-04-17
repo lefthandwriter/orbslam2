@@ -1,3 +1,13 @@
+# Modifications
+
+1. Added jsoncpp dependency, for reading object detection results / annotations from .json files.
+
+2. Added Examples/Dev/traffic_sign.cc. argv[4] path which should point to annotations.json file (optional, only if calling System::SaveKeyFrameObjectMap)
+
+
+******************************** Original ORB-SLAM2 documentation below ********************************
+
+
 # ORB-SLAM2
 **Authors:** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 

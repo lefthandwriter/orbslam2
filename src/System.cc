@@ -19,6 +19,7 @@
 */
 
 
+#include "BoundingBox.h"
 #include "System.h"
 #include "Converter.h"
 #include <chrono>
@@ -428,7 +429,7 @@ void System::SaveKeyFrameObjectMap(const string &filename, const string &annotat
     cout << endl << "keyframe object map saved!" << endl;
 }
 
-void System::SaveTrajectoryMonocular(const string &filename)
+void System::SaveTrajectoryMonocular(const string &filename, const unordered_map<double,string> &timestampToImageFilename)
 {
     cout << endl << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
@@ -452,7 +453,8 @@ void System::SaveTrajectoryMonocular(const string &filename)
 
         // Save camera pose: translation (3x1), rotation (3x3)
         // Format: timestamp, tx, ty, tz, R1, ..., R9
-        f << setprecision(6) << pKF->mTimeStamp << setprecision(7)
+        string imagename = timestampToImageFilename.at(pKF->mTimeStamp);
+        f << setprecision(6) << pKF->mTimeStamp << " " << imagename << setprecision(7)
           << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
           << " " << R.at<float>(0,0) << " " << R.at<float>(0,1) << " " << R.at<float>(0,2)
           << " " << R.at<float>(1,0) << " " << R.at<float>(1,1) << " " << R.at<float>(1,2)

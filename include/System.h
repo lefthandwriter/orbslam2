@@ -111,7 +111,7 @@ public:
     // Save camera trajectory generally for monocular sequences
     // Pose is in matrix format (translation vector and rotation matrix)
     // Call first Shutdown()
-    void SaveTrajectoryMonocular(const string &filename);
+    void SaveTrajectoryMonocular(const string &filename, const unordered_map<double,string> &timestampToImageFilename);
 
     // Save camera trajectory in the TUM RGB-D dataset format.
     // Only for stereo and RGB-D. This method does not work for monocular.

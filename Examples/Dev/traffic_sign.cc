@@ -140,8 +140,8 @@ int processing(char **argv, ORB_SLAM2::System* slamPtr) {
 
     // Save camera trajectory
     string path_to_annotations = argv[4];
-    SLAM.SaveTrajectoryMonocular("Saving/KeyFrameTrajectorySP1_2.txt");
-    SLAM.SaveKeyFrameObjectMap("Saving/ObjectMapSP1_2.txt", path_to_annotations, timestampToImageFilename);
+    SLAM.SaveTrajectoryMonocular("Saving/KeyFrameTrajectory_westwesley.txt", timestampToImageFilename);
+    SLAM.SaveKeyFrameObjectMap("Saving/ObjectMap_westwesley.txt", path_to_annotations, timestampToImageFilename);
     // SLAM.SaveMap("Saving/MapSP1.txt");
 
     return 0;
